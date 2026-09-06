@@ -12,7 +12,8 @@ export default function CreateInvoice() {
   const [clientEmail, setClientEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   
-  const [items, setItems] = useState([{ description: "", quantity: 1, price: 0 }]);
+  // تحديد النوع كـ any[] لمنع أخطاء Vercel
+  const [items, setItems] = useState<any[]>([{ description: "", quantity: 1, price: 0 }]);
   
   const [discount, setDiscount] = useState<number | "">("");
   const [discountType, setDiscountType] = useState<"fixed" | "percentage">("fixed");
@@ -31,7 +32,7 @@ export default function CreateInvoice() {
 
   const updateItem = (index: number, field: string, value: any) => {
     const newItems = [...items];
-    newItems[index][field as keyof typeof newItems[number]] = value;
+    newItems[index][field] = value;
     setItems(newItems);
   };
 
@@ -107,7 +108,6 @@ export default function CreateInvoice() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* بيانات العميل وطريقة الدفع */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">اسم العميل *</label>
@@ -124,12 +124,12 @@ export default function CreateInvoice() {
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">رقم الهاتف</label>
               <input 
-              type="tel" 
-              value={clientPhone} 
-              onChange={(e) => setClientPhone(e.target.value.replace(/\D/g, ''))} // بيقبل أرقام فقط ويحذف أي حروف
-              placeholder="01xxxxxxxxx"
-              maxLength={11} // لو حابب تحدده بـ 11 رقم مثلاً
-              className="w-full p-3 border border-gray-300 rounded-xl bg-white"
+                type="tel" 
+                value={clientPhone} 
+                onChange={(e) => setClientPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="01xxxxxxxxx"
+                maxLength={11}
+                className="w-full p-3 border border-gray-300 rounded-xl bg-white"
               />
             </div>
 
@@ -158,7 +158,6 @@ export default function CreateInvoice() {
             </div>
           </div>
 
-          {/* بنود الفاتورة مع Headers واضحة */}
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-3">بنود الفاتورة (Items)</h3>
             
@@ -219,7 +218,6 @@ export default function CreateInvoice() {
             </button>
           </div>
 
-          {/* الخصم والضرائب */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">الخصم (Discount)</label>
@@ -237,8 +235,8 @@ export default function CreateInvoice() {
                   onChange={(e) => setDiscountType(e.target.value as any)}
                   className="p-2 border rounded-lg text-sm bg-white font-medium"
                 >
-                  <option value="fixed">قيمة ثابتة (EGP)</option>
-                  <option value="percentage">نسبة مئوية (%)</option>
+                  <option value="fixed">قيمة ثابتة</option>
+                  <option value="percentage">نسبة مئوية</option>
                 </select>
               </div>
             </div>
@@ -268,13 +266,11 @@ export default function CreateInvoice() {
             </div>
           </div>
 
-          {/* الإجمالي النهائي */}
           <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center border border-blue-100">
             <span className="font-bold text-blue-900">الإجمالي النهائي:</span>
             <span className="text-2xl font-black text-blue-900">EGP {finalTotal.toLocaleString()}</span>
           </div>
 
-          {/* زر الحفظ */}
           <button 
             type="submit" 
             disabled={loading}

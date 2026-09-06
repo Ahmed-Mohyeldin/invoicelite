@@ -48,7 +48,6 @@ export default function InvoicePage() {
     setLoading(false);
   };
 
-  // دالة تغيير حالة الفاتورة (Pending / Paid / Cancelled)
   const handleStatusChange = async (newStatus: string) => {
     const { error } = await supabase
       .from("invoices")
@@ -69,7 +68,13 @@ export default function InvoicePage() {
       const html2pdf = (await import("html2pdf.js")).default;
       const element = invoiceRef.current;
       
-      const options = {
+      if (!element) {
+        setDownloading(false);
+        return;
+      }
+
+      // إضافة any لمنع أخطاء Typescript في Vercel
+      const options: any = {
         margin:       10,
         filename:     `Invoice-${invoice.id.slice(0, 6)}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
@@ -95,7 +100,13 @@ export default function InvoicePage() {
       const html2pdf = (await import("html2pdf.js")).default;
       const element = invoiceRef.current;
       
-      const options = {
+      if (!element) {
+        setSending(false);
+        return;
+      }
+      
+      // إضافة any لمنع أخطاء Typescript في Vercel
+      const options: any = {
         margin:       10,
         filename:     `Invoice-${invoice.id.slice(0, 6)}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
@@ -141,7 +152,6 @@ export default function InvoicePage() {
   const taxAmount = netSubTotal * (taxPercent / 100);
   const serviceAmount = netSubTotal * (servicePercent / 100);
 
-  // لون شارة الحالة
   const statusColor = 
     invoice.status === 'paid' ? '#16a34a' : 
     invoice.status === 'cancelled' ? '#dc2626' : '#d97706';
@@ -149,13 +159,11 @@ export default function InvoicePage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#111827' }}>
       
-      {/* شريط التحكم العلوي (تغيير الحالة والرجوع) */}
       <div style={{ width: '100%', maxWidth: '768px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }} className="print:hidden">
         <Link href="/invoices" style={{ backgroundColor: '#4b5563', color: '#fff', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', textDecoration: 'none' }}>
           ← رجوع للقائمة
         </Link>
 
-        {/* أزرار تغيير حالة الفاتورة */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#4b5563' }}>الحالة:</span>
           <button 
@@ -179,7 +187,6 @@ export default function InvoicePage() {
         </div>
       </div>
 
-      {/* صندوق الفاتورة */}
       <div 
         ref={invoiceRef} 
         style={{ 
@@ -199,7 +206,6 @@ export default function InvoicePage() {
           <div>
             <h1 style={{ fontSize: '36px', fontWeight: '900', color: '#2563eb', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>INVOICE</h1>
             <p style={{ color: '#374151', fontSize: '14px', fontWeight: '600', margin: 0 }}># {invoice.id}</p>
-            {/* شارة الحالة داخل الفاتورة */}
             <span style={{ display: 'inline-block', marginTop: '8px', padding: '4px 12px', borderRadius: '20px', backgroundColor: statusColor + '20', color: statusColor, fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>
               {invoice.status || 'pending'}
             </span>
@@ -226,8 +232,8 @@ export default function InvoicePage() {
             <p style={{ fontSize: '12px', fontWeight: '800', color: '#374151', margin: '0 0 8px 0', textTransform: 'uppercase' }}>PAYMENT METHOD:</p>
             <p style={{ fontSize: '15px', fontWeight: '700', color: '#2563eb', margin: '0 0 8px 0' }}>
               {invoice.payment_method === 'Cash' ? '💵 Cash (نقدي)' :
-               invoice.payment_method === 'Wallets' ? '📱 Banking Wallets (محافظ إلكترونية)' :
-               invoice.payment_method === 'Instapay' ? '🏦 Instapay / Bank Transfer' : '💵 Cash'}
+               invoice.payment_method === 'Wallets' ? '📱 Banking Wallets' :
+               invoice.payment_method === 'Instapay' ? '🏦 Instapay / Transfer' : '💵 Cash'}
             </p>
             <p style={{ color: '#374151', fontSize: '13px', fontWeight: '600', margin: 0 }}>Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
           </div>
@@ -293,7 +299,6 @@ export default function InvoicePage() {
 
       </div>
 
-      {/* أزرار الإجراءات */}
       <div className="mt-8 flex flex-wrap justify-center gap-4 print:hidden">
         <button 
           onClick={() => window.print()} 
