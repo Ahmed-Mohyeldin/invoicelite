@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,7 +12,6 @@ export default function CreateInvoice() {
   const [clientEmail, setClientEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   
-  // تحديد النوع كـ any[] لمنع أخطاء Vercel
   const [items, setItems] = useState<any[]>([{ description: "", quantity: 1, price: 0 }]);
   
   const [discount, setDiscount] = useState<number | "">("");
@@ -21,6 +20,26 @@ export default function CreateInvoice() {
   const [servicePercent, setServicePercent] = useState<number | "">("");
   
   const [loading, setLoading] = useState(false);
+  
+  // --- الجديد: داتا المنتجات والبحث الذكي ---
+  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+  const [focusedItemIndex, setFocusedItemIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", userData.user.id);
+      if (data) setAvailableProducts(data);
+    }
+  };
+  // -----------------------------------------
 
   const addItem = () => {
     setItems([...items, { description: "", quantity: 1, price: 0 }]);
@@ -34,6 +53,15 @@ export default function CreateInvoice() {
     const newItems = [...items];
     newItems[index][field] = value;
     setItems(newItems);
+  };
+
+  // دالة لاختيار منتج من القائمة المنسدلة
+  const selectProduct = (index: number, product: any) => {
+    const newItems = [...items];
+    newItems[index].description = product.description;
+    newItems[index].price = product.price;
+    setItems(newItems);
+    setFocusedItemIndex(null); // قفل القائمة بعد الاختيار
   };
 
   const subTotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
@@ -162,53 +190,88 @@ export default function CreateInvoice() {
             <h3 className="text-lg font-bold text-gray-800 mb-3">بنود الفاتورة (Items)</h3>
             
             <div className="flex gap-3 mb-2 text-xs font-bold text-gray-600 px-1">
-              <span className="flex-1">وصف المنتج أو الخدمة</span>
+              <span className="flex-1">وصف المنتج / رقم الصنف</span>
               <span className="w-20 text-center">العدد (Qty)</span>
               <span className="w-28 text-center">السعر (Price)</span>
               <span className="w-10"></span>
             </div>
 
-            {items.map((item, index) => (
-              <div key={index} className="flex gap-3 mb-3 items-center">
-                <input 
-                  type="text" 
-                  required
-                  placeholder="وصف الخدمة أو المنتج"
-                  value={item.description}
-                  onChange={(e) => updateItem(index, 'description', e.target.value)}
-                  className="flex-1 p-3 border border-gray-300 rounded-xl"
-                />
-                <input 
-                  type="number" 
-                  min="1"
-                  required
-                  value={item.quantity}
-                  onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                  className="w-20 p-3 border border-gray-300 rounded-xl text-center"
-                  placeholder="العدد"
-                />
-                <input 
-                  type="number" 
-                  min="0"
-                  required
-                  value={item.price}
-                  onChange={(e) => updateItem(index, 'price', e.target.value)}
-                  className="w-28 p-3 border border-gray-300 rounded-xl text-center"
-                  placeholder="السعر"
-                />
-                {items.length > 1 ? (
-                  <button 
-                    type="button" 
-                    onClick={() => removeItem(index)}
-                    className="bg-red-100 text-red-600 w-10 h-12 rounded-xl font-bold flex items-center justify-center"
-                  >
-                    ✕
-                  </button>
-                ) : (
-                  <div className="w-10"></div>
-                )}
-              </div>
-            ))}
+            {items.map((item, index) => {
+              // فلترة المنتجات بناءً على البحث (سواء بالاسم أو الكود)
+              const filteredProducts = availableProducts.filter(p => 
+                p.description.toLowerCase().includes(item.description.toLowerCase()) || 
+                (p.item_code && p.item_code.toLowerCase().includes(item.description.toLowerCase()))
+              );
+
+              return (
+                <div key={index} className="flex gap-3 mb-3 items-start">
+                  
+                  {/* الحاوية دي مهمة جداً عشان القائمة المنسدلة تظهر تحت الحقل ده بس */}
+                  <div className="flex-1 relative">
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="ابحث بالاسم أو الكود..."
+                      value={item.description}
+                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                      onFocus={() => setFocusedItemIndex(index)}
+                      // تأخير بسيط عند فقدان التركيز عشان يسمح للضغطة على القائمة تتنفذ
+                      onBlur={() => setTimeout(() => setFocusedItemIndex(null), 200)}
+                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                    
+                    {/* القائمة المنسدلة الذكية */}
+                    {focusedItemIndex === index && item.description.length > 0 && filteredProducts.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        {filteredProducts.map(product => (
+                          <div 
+                            key={product.id} 
+                            onClick={() => selectProduct(index, product)}
+                            className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 flex justify-between items-center"
+                          >
+                            <div>
+                              <span className="font-bold text-gray-800">{product.description}</span>
+                              {product.item_code && <span className="block text-xs text-blue-600 font-semibold">كود: {product.item_code}</span>}
+                            </div>
+                            <span className="font-bold text-gray-600 text-sm">{product.price} EGP</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <input 
+                    type="number" 
+                    min="1"
+                    required
+                    value={item.quantity}
+                    onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                    className="w-20 p-3 border border-gray-300 rounded-xl text-center"
+                    placeholder="العدد"
+                  />
+                  <input 
+                    type="number" 
+                    min="0"
+                    required
+                    value={item.price}
+                    onChange={(e) => updateItem(index, 'price', e.target.value)}
+                    className="w-28 p-3 border border-gray-300 rounded-xl text-center"
+                    placeholder="السعر"
+                  />
+                  {items.length > 1 ? (
+                    <button 
+                      type="button" 
+                      onClick={() => removeItem(index)}
+                      className="bg-red-100 text-red-600 w-10 h-12 rounded-xl font-bold flex items-center justify-center hover:bg-red-200"
+                    >
+                      ✕
+                    </button>
+                  ) : (
+                    <div className="w-10"></div>
+                  )}
+                </div>
+              );
+            })}
             <button 
               type="button" 
               onClick={addItem}

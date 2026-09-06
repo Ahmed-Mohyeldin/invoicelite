@@ -73,7 +73,6 @@ export default function InvoicePage() {
         return;
       }
 
-      // إضافة any لمنع أخطاء Typescript في Vercel
       const options: any = {
         margin:       10,
         filename:     `Invoice-${invoice.id.slice(0, 6)}.pdf`,
@@ -105,7 +104,6 @@ export default function InvoicePage() {
         return;
       }
       
-      // إضافة any لمنع أخطاء Typescript في Vercel
       const options: any = {
         margin:       10,
         filename:     `Invoice-${invoice.id.slice(0, 6)}.pdf`,
@@ -202,46 +200,59 @@ export default function InvoicePage() {
         }}
       >
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #e5e7eb', paddingBottom: '32px', marginBottom: '32px' }}>
-          <div>
-            <h1 style={{ fontSize: '36px', fontWeight: '900', color: '#2563eb', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>INVOICE</h1>
-            <p style={{ color: '#374151', fontSize: '14px', fontWeight: '600', margin: 0 }}># {invoice.id}</p>
-            <span style={{ display: 'inline-block', marginTop: '8px', padding: '4px 12px', borderRadius: '20px', backgroundColor: statusColor + '20', color: statusColor, fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-              {invoice.status || 'pending'}
-            </span>
+        {/* --- Header: Left (Invoice Info & Company) | Right (Large Logo) --- */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #e5e7eb', paddingBottom: '24px', marginBottom: '32px' }}>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <h1 style={{ fontSize: '40px', fontWeight: '900', color: '#2563eb', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>INVOICE</h1>
+              <p style={{ color: '#4b5563', fontSize: '13px', fontWeight: '700', margin: 0 }}>REF: {invoice.id}</p>
+              <span style={{ display: 'inline-block', marginTop: '8px', padding: '4px 12px', borderRadius: '20px', backgroundColor: statusColor + '20', color: statusColor, fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                {invoice.status || 'pending'}
+              </span>
+            </div>
+
+            <div>
+              <h2 style={{ fontWeight: '900', color: '#111827', fontSize: '20px', margin: '0 0 4px 0', textTransform: 'uppercase' }}>
+                {settings?.company_name || "InvoiceLite System"}
+              </h2>
+              {settings?.company_address && <p style={{ color: '#374151', fontSize: '14px', margin: '2px 0', fontWeight: '500' }}>{settings.company_address}</p>}
+              {settings?.company_phone && <p style={{ color: '#374151', fontSize: '14px', margin: '2px 0', fontWeight: '500' }}>{settings.company_phone}</p>}
+              {settings?.tax_number && <p style={{ color: '#111827', fontSize: '14px', margin: '4px 0 0 0', fontWeight: '800' }}>Tax ID: {settings.tax_number}</p>}
+            </div>
           </div>
           
           <div style={{ textAlign: 'right' }}>
-            <h2 style={{ fontWeight: '700', color: '#111827', fontSize: '24px', margin: '0 0 4px 0' }}>
-              {settings?.company_name || "InvoiceLite System"}
-            </h2>
-            {settings?.company_address && <p style={{ color: '#1f2937', fontSize: '14px', margin: '4px 0 0 0' }}>{settings.company_address}</p>}
-            {settings?.company_phone && <p style={{ color: '#1f2937', fontSize: '14px', margin: '4px 0 0 0' }}>{settings.company_phone}</p>}
-            {settings?.tax_number && <p style={{ color: '#111827', fontSize: '14px', margin: '6px 0 0 0', fontWeight: '700' }}>Tax ID: {settings.tax_number}</p>}
+            {settings?.logo_url && (
+              <img 
+                src={settings.logo_url} 
+                alt="Company Logo" 
+                style={{ maxHeight: '150px', maxWidth: '260px', objectFit: 'contain' }} 
+              />
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: '#f3f4f6', borderRadius: '12px', padding: '24px', marginBottom: '32px', border: '1px solid #e5e7eb' }}>
+        {/* --- Middle Box: Billed To & Date --- */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: '#f9fafb', borderRadius: '12px', padding: '24px', marginBottom: '32px', border: '1px solid #f3f4f6' }}>
           <div>
-            <p style={{ fontSize: '12px', fontWeight: '800', color: '#374151', margin: '0 0 8px 0', textTransform: 'uppercase' }}>BILLED TO:</p>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#111827', margin: '0 0 4px 0' }}>{invoice.client_name}</h3>
-            <p style={{ color: '#1f2937', fontSize: '14px', fontWeight: '600', margin: '4px 0 0 0' }}>{invoice.client_phone}</p>
-            {invoice.client_email && <p style={{ color: '#1f2937', fontSize: '14px', fontWeight: '600', margin: '4px 0 0 0' }}>{invoice.client_email}</p>}
+            <p style={{ fontSize: '13px', fontWeight: '900', color: '#4b5563', margin: '0 0 8px 0', textTransform: 'uppercase' }}>BILLED TO:</p>
+            <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#111827', margin: '0 0 4px 0' }}>{invoice.client_name}</h3>
+            {invoice.client_phone && <p style={{ color: '#374151', fontSize: '14px', fontWeight: '600', margin: '4px 0 0 0' }}>{invoice.client_phone}</p>}
+            {invoice.client_email && <p style={{ color: '#374151', fontSize: '14px', fontWeight: '600', margin: '4px 0 0 0' }}>{invoice.client_email}</p>}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '12px', fontWeight: '800', color: '#374151', margin: '0 0 8px 0', textTransform: 'uppercase' }}>PAYMENT METHOD:</p>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: '#2563eb', margin: '0 0 8px 0' }}>
-              {invoice.payment_method === 'Cash' ? '💵 Cash (نقدي)' :
-               invoice.payment_method === 'Wallets' ? '📱 Banking Wallets' :
-               invoice.payment_method === 'Instapay' ? '🏦 Instapay / Transfer' : '💵 Cash'}
+            <p style={{ fontSize: '13px', fontWeight: '900', color: '#4b5563', margin: '0 0 8px 0', textTransform: 'uppercase' }}>DATE ISSUED:</p>
+            <p style={{ fontSize: '16px', fontWeight: '800', color: '#111827', margin: '0 0 8px 0' }}>
+              {new Date(invoice.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
-            <p style={{ color: '#374151', fontSize: '13px', fontWeight: '600', margin: 0 }}>Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
           </div>
         </div>
 
+        {/* --- Items Table --- */}
         <table style={{ width: '100%', textAlign: 'left', marginBottom: '32px', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #d1d5db', color: '#111827', fontSize: '14px', fontWeight: '700' }}>
+            <tr style={{ borderBottom: '2px solid #d1d5db', color: '#111827', fontSize: '14px', fontWeight: '800' }}>
               <th style={{ paddingBottom: '12px' }}>Description</th>
               <th style={{ paddingBottom: '12px', textAlign: 'center' }}>Qty</th>
               <th style={{ paddingBottom: '12px', textAlign: 'center' }}>Price</th>
@@ -251,10 +262,10 @@ export default function InvoicePage() {
           <tbody>
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '16px 0', color: '#111827', fontWeight: '600' }}>{item.description}</td>
-                <td style={{ padding: '16px 0', textAlign: 'center', color: '#1f2937', fontWeight: '600' }}>{item.quantity}</td>
-                <td style={{ padding: '16px 0', textAlign: 'center', color: '#1f2937', fontWeight: '600'  }}>{item.price}</td>
-                <td style={{ padding: '16px 0', textAlign: 'right', fontWeight: '700', color: '#111827' }}>
+                <td style={{ padding: '16px 0', color: '#111827', fontWeight: '700' }}>{item.description}</td>
+                <td style={{ padding: '16px 0', textAlign: 'center', color: '#374151', fontWeight: '600' }}>{item.quantity}</td>
+                <td style={{ padding: '16px 0', textAlign: 'center', color: '#374151', fontWeight: '600'  }}>{item.price}</td>
+                <td style={{ padding: '16px 0', textAlign: 'right', fontWeight: '800', color: '#111827' }}>
                   {(item.quantity * item.price).toLocaleString()}
                 </td>
               </tr>
@@ -262,39 +273,57 @@ export default function InvoicePage() {
           </tbody>
         </table>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {/* --- Footer: Left (Notes) | Right (Totals) --- */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '16px' }}>
+          
+          {/* Notes Section - تم التعديل لتكون واضحة وجريئة */}
+          <div style={{ width: '50%', paddingRight: '24px', paddingTop: '8px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '900', color: '#111827', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Payment & Notes</h4>
+            <p style={{ fontSize: '14px', color: '#111827', lineHeight: '1.6', margin: '0 0 12px 0', fontWeight: '600' }}>
+              <strong style={{ fontWeight: '900' }}>Method:</strong> {
+               invoice.payment_method === 'Cash' ? '💵 Cash' :
+               invoice.payment_method === 'Wallets' ? '📱 Banking Wallets' :
+               invoice.payment_method === 'Instapay' ? '🏦 Instapay / Bank Transfer' : 'Cash'
+              }
+            </p>
+            <p style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>
+              Thank you for your business. Please make sure to include the invoice reference number when making a payment.
+            </p>
+          </div>
+
           <div style={{ width: '100%', maxWidth: '320px', color: '#111827' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', marginBottom: '12px' }}>
               <span>Subtotal:</span>
               <span>{subTotal.toLocaleString()}</span>
             </div>
             
             {discountValue > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '600', color: '#16a34a', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: '#16a34a', marginBottom: '12px' }}>
                 <span>Discount:</span>
                 <span>- {discountAmount.toLocaleString()}</span>
               </div>
             )}
             
             {taxPercent > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', marginBottom: '12px' }}>
                 <span>Tax ({taxPercent}%):</span>
                 <span>{taxAmount.toLocaleString()}</span>
               </div>
             )}
 
             {servicePercent > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', marginBottom: '12px' }}>
                 <span>Service ({servicePercent}%):</span>
                 <span>{serviceAmount.toLocaleString()}</span>
               </div>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', color: '#1e3a8a', marginTop: '16px', border: '1px solid #bfdbfe' }}>
-              <span style={{ fontWeight: '800', fontSize: '14px', textTransform: 'uppercase' }}>TOTAL:</span>
+              <span style={{ fontWeight: '900', fontSize: '14px', textTransform: 'uppercase' }}>TOTAL:</span>
               <span style={{ fontSize: '24px', fontWeight: '900' }}>EGP {invoice.total.toLocaleString()}</span>
             </div>
           </div>
+
         </div>
 
       </div>

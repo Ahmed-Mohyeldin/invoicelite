@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -56,27 +57,40 @@ export default function Home() {
           </button>
         </div>
 
-        {/* ضفنا زرار الإعدادات هنا */}
-        <div className="mt-6 mb-8 flex gap-3">
-          <a
-            href="/create"
-            className="inline-block text-center rounded-xl bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition"
-          >
-            Create Invoice
-          </a>
-          <a 
-            href="/invoices" 
-            className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition shadow-sm flex items-center gap-2"
-          >
-            📋 All Invoices
-          </a>
-          <a
-            href="/settings"
-            className="inline-block text-center rounded-xl bg-gray-800 px-6 py-3 text-white font-medium hover:bg-gray-900 transition"
-          >
-            Settings ⚙️
-          </a>
-        </div>
+        {/* Quick Actions */}
+<div className="flex flex-wrap items-center gap-3 mb-8">
+  <Link 
+    href="/create" 
+    className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow-sm"
+  >
+    <span className="text-lg">➕</span> 
+    <span>Create Invoice</span>
+  </Link>
+
+  <Link 
+    href="/invoices" 
+    className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition shadow-sm"
+  >
+    <span className="text-lg">📑</span> 
+    <span>All Invoices</span>
+  </Link>
+
+  <Link 
+    href="/products" 
+    className="flex items-center gap-2 bg-amber-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-600 transition shadow-sm"
+  >
+    <span className="text-lg">📦</span> 
+    <span>Products</span>
+  </Link>
+
+  <Link 
+    href="/settings" 
+    className="flex items-center gap-2 bg-gray-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-900 transition shadow-sm"
+  >
+    <span className="text-lg">⚙️</span> 
+    <span>Settings</span>
+  </Link>
+</div>
 
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">

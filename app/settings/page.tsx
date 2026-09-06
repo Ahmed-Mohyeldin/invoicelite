@@ -2,112 +2,196 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
   const [companyName, setCompanyName] = useState("");
+  const [companyPhone, setCompanyPhone] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [taxNumber, setTaxNumber] = useState("");
-  const [companyPhone, setCompanyPhone] = useState(""); // رقم تليفون الشركة
-  const [companyEmail, setCompanyEmail] = useState(""); // إيميل الشركة
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
-    loadSettings();
+    fetchSettings();
   }, []);
 
-  const loadSettings = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from("settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-        
-      if (data) {
-        setCompanyName(data.company_name || "");
-        setCompanyAddress(data.company_address || "");
-        setTaxNumber(data.tax_number || "");
-        setCompanyPhone(data.company_phone || "");
-        setCompanyEmail(data.company_email || "");
-      }
+  const fetchSettings = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      router.push("/login");
+      return;
     }
-    setFetching(false);
-  };
+    setUser(userData.user);
 
-  const handleSave = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("settings")
-      .upsert({
-        user_id: user.id,
-        company_name: companyName,
-        company_address: companyAddress,
-        tax_number: taxNumber,
-        company_phone: companyPhone,
-        company_email: companyEmail
-      });
+      .select("*")
+      .eq("user_id", userData.user.id)
+      .single();
 
-    if (error) {
-      alert("حصلت مشكلة في الحفظ: " + error.message);
-    } else {
-      alert("تم حفظ بيانات الشركة بنجاح! 🏢");
-      window.location.href = "/";
+    if (data) {
+      setCompanyName(data.company_name || "");
+      setCompanyPhone(data.company_phone || "");
+      setCompanyAddress(data.company_address || "");
+      setTaxNumber(data.tax_number || "");
+      setLogoUrl(data.logo_url || "");
     }
     setLoading(false);
   };
 
-  if (fetching) return <p className="p-10 text-center text-black">جاري التحميل...</p>;
+  // دالة رفع الشعار (Logo) كـ Base64 لتسهيل التخزين بدون إعدادات معقدة
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      setLogoUrl(reader.result as string);
+      setUploadingImage(false);
+    };
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    const updates = {
+      user_id: user.id,
+      company_name: companyName,
+      company_phone: companyPhone,
+      company_address: companyAddress,
+      tax_number: taxNumber,
+      logo_url: logoUrl,
+    };
+
+    const { error } = await supabase
+      .from("settings")
+      .upsert(updates, { onConflict: 'user_id' }); // بيحدث لو موجود أو ينشئ جديد
+
+    if (error) {
+      alert("حدث خطأ أثناء الحفظ: " + error.message);
+    } else {
+      alert("تم حفظ إعدادات الشركة بنجاح! ✅");
+    }
+    setSaving(false);
+  };
+
+  if (loading) return <p className="p-10 text-center text-black">جاري تحميل الإعدادات...</p>;
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6 text-black">
-      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 shadow-sm border border-gray-100">
-        <h1 className="text-3xl font-bold text-gray-900">Company Settings</h1>
-        <p className="mt-2 text-gray-600">بيانات شركتك اللي هتظهر في الفواتير للعملاء.</p>
-
-        <form onSubmit={handleSave} className="mt-8 space-y-6">
+    <div className="min-h-screen bg-gray-50 py-10 px-4 text-black font-sans">
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+        
+        <div className="flex justify-between items-center mb-8 border-b pb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Company Name (اسم الشركة)</label>
-            <input type="text" required value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full bg-white text-black rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" placeholder="Zara Jeans" />
+            <h1 className="text-2xl font-black text-gray-800">إعدادات الشركة ⚙️</h1>
+            <p className="text-sm text-gray-500 mt-1">البيانات دي هتظهر في كل فواتيرك بشكل أوتوماتيك.</p>
+          </div>
+          <Link href="/" className="bg-gray-700 text-white px-4 py-2 rounded-xl text-sm font-semibold">
+            الرئيسية 🏠
+          </Link>
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-6">
+          
+          {/* قسم رفع الشعار */}
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col items-center justify-center">
+            <label className="block text-sm font-bold text-blue-900 mb-4">شعار الشركة (Company Logo)</label>
+            
+            {logoUrl ? (
+              <div className="relative mb-4">
+                <img src={logoUrl} alt="Company Logo" className="max-h-32 object-contain rounded-lg shadow-sm bg-white p-2" />
+                <button 
+                  type="button" 
+                  onClick={() => setLogoUrl("")} 
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="w-32 h-32 bg-white border-2 border-dashed border-blue-300 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-3xl">🏢</span>
+              </div>
+            )}
+
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleLogoUpload}
+              className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+            />
+            {uploadingImage && <p className="text-xs text-blue-600 mt-2">جاري رفع الصورة...</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Company Address (العنوان)</label>
-            <input type="text" value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} className="w-full bg-white text-black rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" placeholder="Cairo, Alzhazra" />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
+          {/* بيانات الشركة */}
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number (رقم الهاتف)</label>
-              <input type="tel" value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value.replace(/\D/g, ''))} className="w-full bg-white text-black rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" placeholder="01000000000" />
+              <label className="block text-sm font-bold text-gray-700 mb-1">اسم الشركة (Company Name)</label>
+              <input 
+                type="text" 
+                value={companyName} 
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="مثال: InvoiceLite System"
+                className="w-full p-3 border border-gray-300 rounded-xl bg-white"
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email (البريد الإلكتروني)</label>
-              <input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="w-full bg-white text-black rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" placeholder="info@zarajeans.com" />
+              <label className="block text-sm font-bold text-gray-700 mb-1">الهاتف (Phone Number)</label>
+              <input 
+                type="text" 
+                value={companyPhone} 
+                onChange={(e) => setCompanyPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="01xxxxxxxxx"
+                maxLength={11}
+                className="w-full p-3 border border-gray-300 rounded-xl bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">العنوان (Address)</label>
+              <input 
+                type="text" 
+                value={companyAddress} 
+                onChange={(e) => setCompanyAddress(e.target.value)}
+                placeholder="مثال: القاهرة، مصر"
+                className="w-full p-3 border border-gray-300 rounded-xl bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">الرقم الضريبي (Tax ID) - اختياري</label>
+              <input 
+                type="text" 
+                value={taxNumber} 
+                onChange={(e) => setTaxNumber(e.target.value)}
+                placeholder="123-456-789"
+                className="w-full p-3 border border-gray-300 rounded-xl bg-white"
+              />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tax Registration Number (الرقم الضريبي)</label>
-            <input type="text" value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} className="w-full bg-white text-black rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" placeholder="1232323232" />
-          </div>
+          <button 
+            type="submit" 
+            disabled={saving || uploadingImage}
+            className="w-full bg-gray-800 text-white p-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition shadow-md disabled:opacity-50"
+          >
+            {saving ? "جاري الحفظ..." : "حفظ الإعدادات 💾"}
+          </button>
 
-          <div className="flex gap-3 pt-4">
-            <button type="submit" disabled={loading} className="rounded-xl bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition disabled:opacity-50">
-              {loading ? "جاري الحفظ..." : "Save Settings"}
-            </button>
-            <button type="button" onClick={() => window.location.href = "/"} className="rounded-xl border border-gray-300 px-6 py-3 text-gray-700 font-medium hover:bg-gray-50 transition">
-              Cancel
-            </button>
-          </div>
         </form>
+
       </div>
-    </main>
+    </div>
   );
 }
