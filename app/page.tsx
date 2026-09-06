@@ -56,13 +56,25 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="mt-6 mb-8">
-          {/* غيرنا اللينك هنا لـ a عادي */}
+        {/* ضفنا زرار الإعدادات هنا */}
+        <div className="mt-6 mb-8 flex gap-3">
           <a
             href="/create"
             className="inline-block text-center rounded-xl bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition"
           >
             Create Invoice
+          </a>
+          <a 
+            href="/invoices" 
+            className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition shadow-sm flex items-center gap-2"
+          >
+            📋 All Invoices
+          </a>
+          <a
+            href="/settings"
+            className="inline-block text-center rounded-xl bg-gray-800 px-6 py-3 text-white font-medium hover:bg-gray-900 transition"
+          >
+            Settings ⚙️
           </a>
         </div>
 
@@ -118,7 +130,6 @@ export default function Home() {
                         </span>
                       </td>
                       <td className="p-4 text-center">
-                        {/* غيرنا اللينك هنا برضه */}
                         <a 
                           href={`/invoice/${invoice.id}`}
                           className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-sm transition"
